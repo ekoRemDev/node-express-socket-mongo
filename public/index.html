@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!--socket js files-->
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+
+</head>
+<body>
+
+<div class="container">
+    <h1 id="messageHeader">Hello Socket World</h1>
+    <h2>Number Of connection <span id="numberOfConnection"></span></h2>
+    <h2>Horizontal form</h2>
+    <form action="" class="form-inline">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" class="form-control" id="name">
+        </div>
+        <div class="form-group">
+            <label for="message">Message:</label>
+            <input type="text" class="form-control" id="message">
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button class="btn btn-default" id="btnSendMessage">Submit</button>
+            </div>
+        </div>
+    </form>
+
+    <h2>Messages</h2>
+    <ul id="messages"></ul>
+
+
+</div>
+
+
+<script>
+    $( document ).ready(function() {
+
+        // new instance
+        var socket = io();
+
+        // Get the DOM
+        const messageHeader = document.getElementById('messageHeader');
+        const numberOfConnection = document.getElementById('numberOfConnection');
+        const btnSendMessage = document.getElementById('btnSendMessage');
+
+        const inputName = document.getElementById('inputName');
+        const inputMessage = document.getElementById('inputMessage');
+
+        // create an click event and emit
+        messageHeader.addEventListener('click', () => {
+            // on click we emit the message
+            socket.emit('fromIndexMessage');
+        });
+
+        // emit from socket.io 'app.js'
+        socket.on('fromAppToIndexMessage', (data) => {
+            // change the dom with the data from socket.io emit
+            messageHeader.innerHTML = data;
+        });
+
+        // cathch the numberOfConnections from app.js
+        socket.on('numberOfConnections', (data) => {
+            numberOfConnection.innerText = data;
+
+
+
+
+
+        });
+
+
+        // // btnSendMessage click event
+        // btnSendMessage.addEventListener('click', (event) => {
+        //
+        //     // get the data
+        //     var data = {
+        //         name: document.getElementById('name').value,
+        //         message: document.getElementById('message').value
+        //     };
+        //     // emit the data from form to app.js
+        //     socket.emit('btnClick', data);
+        // });
+
+        $('form').submit(()=>{
+            // get the data
+            var data = {
+                name: $('#name').val(),
+                message: $('#message').val()
+            };
+            // emit the data from form to app.js
+            socket.emit('btnClick', data);
+
+            $('#name').val('');
+            $('#message').val('');
+
+            return false;
+        });
+
+
+        socket.on('btnClicked', (sendData) => {
+
+                $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
+        });
+
+
+
+    });
+</script>
+</body>
+</html>
