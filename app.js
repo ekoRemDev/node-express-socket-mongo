@@ -56,10 +56,12 @@ io.on('connection', (socket) => {
         };
 
        io.emit('btnClicked',sendData);
-
-
     });
 
+
+    socket.on('messageTyping',(recievedData)=>{
+       socket.broadcast.emit('messageTypingWarning',recievedData);
+    });
 
     socket.on('disconnect', () => {
         console.log('disconnected');

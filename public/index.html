@@ -43,6 +43,7 @@
     </form>
 
     <h2>Messages</h2>
+    <span id="socketMessages"></span>
     <ul id="messages"></ul>
 
 
@@ -60,8 +61,9 @@
         const numberOfConnection = document.getElementById('numberOfConnection');
         const btnSendMessage = document.getElementById('btnSendMessage');
 
-        const inputName = document.getElementById('inputName');
-        const inputMessage = document.getElementById('inputMessage');
+        const inputName = document.getElementById('name');
+        const inputMessage = document.getElementById('message');
+        const socketMessages = document.getElementById('socketMessages');
 
         // create an click event and emit
         messageHeader.addEventListener('click', () => {
@@ -79,24 +81,8 @@
         socket.on('numberOfConnections', (data) => {
             numberOfConnection.innerText = data;
 
-
-
-
-
         });
 
-
-        // // btnSendMessage click event
-        // btnSendMessage.addEventListener('click', (event) => {
-        //
-        //     // get the data
-        //     var data = {
-        //         name: document.getElementById('name').value,
-        //         message: document.getElementById('message').value
-        //     };
-        //     // emit the data from form to app.js
-        //     socket.emit('btnClick', data);
-        // });
 
         $('form').submit(()=>{
             // get the data
@@ -115,8 +101,16 @@
 
 
         socket.on('btnClicked', (sendData) => {
+            $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
+        });
 
-                $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
+        $('#message').keypress(()=>{
+            // console.log(inputName.value);
+            socket.emit('messageTyping', inputName.value);
+        });
+
+        socket.on('messageTypingWarning',(data)=>{
+            socketMessages.innerHTML = data + ' is typing...';
         });
 
 
