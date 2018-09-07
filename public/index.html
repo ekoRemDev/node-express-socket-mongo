@@ -24,8 +24,7 @@
 <div class="container">
     <h1 id="messageHeader">Hello Socket World</h1>
     <h2>Number Of connection <span id="numberOfConnection"></span></h2>
-    <h2>Horizontal form</h2>
-    <form action="" class="form-inline">
+    <form action="">
         <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" class="form-control" id="name">
@@ -104,16 +103,27 @@
             $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
         });
 
-        $('#message').keypress(()=>{
+        $('#message').keydown(()=>{
             // console.log(inputName.value);
             socket.emit('messageTyping', inputName.value);
         });
+
+        $('#message').keyup(()=>{
+            // console.log(inputName.value);
+            setTimeout(()=>{
+                socket.emit('messageNotTyping', inputName.value);
+            },3000);
+
+        });
+
 
         socket.on('messageTypingWarning',(data)=>{
             socketMessages.innerHTML = data + ' is typing...';
         });
 
-
+        socket.on('messageNotTypingWarning',()=>{
+            socketMessages.innerHTML = '';
+        });
 
     });
 </script>

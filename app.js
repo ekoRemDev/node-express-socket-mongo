@@ -3,6 +3,24 @@ const express = require('express');
 const app = express();
 const socket = require('socket.io');
 
+// Mongoose
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/development');
+const db = mongoose.connection;
+db.on('error',(err)=>{
+    if(err){
+        throw err;
+        console.log(err.message);
+    }
+});
+
+
+// connect to db
+db.once('open',()=>{
+   console.log('we are connected to mongodb');
+});
+
+
 // create a server on port 3000
 const server = app.listen(3000, () => {
     console.log('server runs on 3000');
@@ -15,7 +33,7 @@ const io = socket(server);
 // we define an connection array to store active sessions
 // on each new connection and disconnect event we will add/remove
 connections = [];
-messages = [];
+// messages = [];
 
 // default router
 app.get('/', (req, res) => {
@@ -25,6 +43,22 @@ app.get('/', (req, res) => {
 
 // create a socket connection
 io.on('connection', (socket) => {
+
+
+    // add record to database when its connected
+    let messageCollection = db.collection('messages');
+    messageCollection.insert({message:'new user logged in'});
+
+    messageCollection.find({}).toArray((err,docs)=>{
+        if(docs){
+            console.log('=========== Start =============');
+            console.log(' there is result');
+            console.log(docs.length);
+            console.log('=========== End =============');
+        }
+    });
+
+
 
     console.log('user connected');
     // we push new socket to connections array
@@ -47,8 +81,10 @@ io.on('connection', (socket) => {
 
     // recieve data from index.html
     socket.on('btnClick', (data)=>{
-        messages.push(data);
-        console.log(messages.length);
+        // messages.push(data);
+        // console.log(messages.length);
+        // inserts data into mongodb
+        messageCollection.insert({message:data.message});
 
         var sendData= {
           name : data.name,
@@ -61,6 +97,10 @@ io.on('connection', (socket) => {
 
     socket.on('messageTyping',(recievedData)=>{
        socket.broadcast.emit('messageTypingWarning',recievedData);
+    });
+
+    socket.on('messageNotTyping',()=>{
+       socket.broadcast.emit('messageNotTypingWarning');
     });
 
     socket.on('disconnect', () => {
