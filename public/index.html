@@ -56,7 +56,8 @@
         var socket = io();
 
         // Get the DOM
-        const messageHeader = document.getElementById('messageHeader');
+        const messageHeader =  document.getElementById('messageHeader');
+        // var messageHeader = $('#messageHeader');
         const numberOfConnection = document.getElementById('numberOfConnection');
         const btnSendMessage = document.getElementById('btnSendMessage');
 
@@ -69,6 +70,7 @@
             // on click we emit the message
             socket.emit('fromIndexMessage');
         });
+
 
         // emit from socket.io 'app.js'
         socket.on('fromAppToIndexMessage', (data) => {
@@ -91,16 +93,22 @@
             };
             // emit the data from form to app.js
             socket.emit('btnClick', data);
-
+            socket.emit('messageNotTyping');
             $('#name').val('');
             $('#message').val('');
-
+            $('#messages').empty();
             return false;
         });
 
 
         socket.on('btnClicked', (sendData) => {
-            $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
+            console.log(sendData.length);
+            $('#messages').empty();
+            for(var i=0; i<sendData.length;i++){
+                // console.log(sendData[i]._id + ' - ' + sendData[i].name + ' - ' + sendData[i].message);
+                $('#messages').append($('<li>').text(sendData[i]._id + ' - ' + sendData[i].name + ' - ' + sendData[i].message));
+            };
+            // $('#messages').append($('<li>').text(sendData.name + ' ' + sendData.message));
         });
 
         $('#message').keydown(()=>{

@@ -5,7 +5,7 @@ const socket = require('socket.io');
 
 // Mongoose
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/development');
+mongoose.connect('mongodb://localhost/node-express-socket-mongo');
 const db = mongoose.connection;
 db.on('error',(err)=>{
     if(err){
@@ -29,6 +29,8 @@ const server = app.listen(3000, () => {
 // define socket
 const io = socket(server);
 
+
+
 // we will track the active users
 // we define an connection array to store active sessions
 // on each new connection and disconnect event we will add/remove
@@ -47,14 +49,18 @@ io.on('connection', (socket) => {
 
     // add record to database when its connected
     let messageCollection = db.collection('messages');
-    messageCollection.insert({message:'new user logged in'});
+    // messageCollection.insert({message:'new user logged in'});
 
-    messageCollection.find({}).toArray((err,docs)=>{
+    messageCollection.find({}).limit(5).sort({_id:-1}).toArray((err,docs)=>{
         if(docs){
-            console.log('=========== Start =============');
-            console.log(' there is result');
-            console.log(docs.length);
-            console.log('=========== End =============');
+            for(var i=0; i<docs.length;i++){
+                console.log(docs[i]._id + ' - ' + docs[i].name + ' - ' + docs[i].message)
+            }
+            // console.log('=========== Start =============');
+            // console.log(' there is result');
+            // console.log(docs.length);
+            // console.log('=========== End =============');
+            io.emit('btnClicked',docs);
         }
     });
 
@@ -84,14 +90,29 @@ io.on('connection', (socket) => {
         // messages.push(data);
         // console.log(messages.length);
         // inserts data into mongodb
-        messageCollection.insert({message:data.message});
+        messageCollection.insert({name:data.name, message:data.message});
 
         var sendData= {
           name : data.name,
           message:data.message
         };
 
-       io.emit('btnClicked',sendData);
+       // io.emit('btnClicked',sendData);
+        messageCollection.find({}).limit(5).sort({_id:-1}).toArray((err,docs)=>{
+            if(docs){
+                for(var i=0; i<docs.length;i++){
+                    console.log(docs[i]._id + ' - ' + docs[i].name + ' - ' + docs[i].message)
+                }
+                // console.log('=========== Start =============');
+                // console.log(' there is result');
+                // console.log(docs.length);
+                // console.log('=========== End =============');
+                io.emit('btnClicked',docs);
+            }
+        });
+
+
+
     });
 
 
