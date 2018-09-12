@@ -36,6 +36,11 @@ const io = socket(server);
 // on each new connection and disconnect event we will add/remove
 connections = [];
 // messages = [];
+socketIds = [];
+
+var inputNames = [];
+var users = {};
+var nameMessage = '';
 
 // default router
 app.get('/', (req, res) => {
@@ -43,28 +48,55 @@ app.get('/', (req, res) => {
 });
 
 
+// Name Space Sample
+var nsp = io.of('/namespace1');
+nsp.on('connection', function(socket) {
+    console.log('someone connected on namespace1');
+    nsp.emit('hi', 'Hello everyone!');
+});
+
+var nsp = io.of('/namespace2');
+nsp.on('connection', function(socket) {
+    console.log('someone connected on namespace2');
+    nsp.emit('hi', 'Hello everyone!');
+});
+
+var nsp = io.of('/namespace3');
+nsp.on('connection', function(socket) {
+    console.log('someone connected on namespace3');
+    nsp.emit('hi', 'Hello everyone!');
+});
+
+
+
 // create a socket connection
 io.on('connection', (socket) => {
 
+    var showMessages = function (){
+        // io.emit('btnClicked',sendData);
+        messageCollection.find({}).limit(5).sort({_id:-1}).toArray((err,docs)=>{
+            if(docs){
+                for(var i=0; i<docs.length;i++){
+                    console.log(' - ' + docs[i].name + ' - ' + docs[i].message)
+                }
+                // console.log('=========== Start =============');
+                // console.log(' there is result');
+                // console.log(docs.length);
+                // console.log('=========== End =============');
+                io.emit('btnClicked',docs);
+            }
+        });
+    };
+
+
+    socketIds.push(socket);
+    console.log(socketIds.length);
 
     // add record to database when its connected
     let messageCollection = db.collection('messages');
     // messageCollection.insert({message:'new user logged in'});
 
-    messageCollection.find({}).limit(5).sort({_id:-1}).toArray((err,docs)=>{
-        if(docs){
-            for(var i=0; i<docs.length;i++){
-                console.log(docs[i]._id + ' - ' + docs[i].name + ' - ' + docs[i].message)
-            }
-            // console.log('=========== Start =============');
-            // console.log(' there is result');
-            // console.log(docs.length);
-            // console.log('=========== End =============');
-            io.emit('btnClicked',docs);
-        }
-    });
-
-
+    showMessages();
 
     console.log('user connected');
     // we push new socket to connections array
@@ -87,32 +119,36 @@ io.on('connection', (socket) => {
 
     // recieve data from index.html
     socket.on('btnClick', (data)=>{
-        // messages.push(data);
-        // console.log(messages.length);
-        // inserts data into mongodb
-        messageCollection.insert({name:data.name, message:data.message});
 
-        var sendData= {
-          name : data.name,
-          message:data.message
-        };
+        // check if message has special function
+        var msg = data.message;
+        if(msg.substr(0,3) === '/w '){
+            console.log('Special Function');
 
-       // io.emit('btnClicked',sendData);
-        messageCollection.find({}).limit(5).sort({_id:-1}).toArray((err,docs)=>{
-            if(docs){
-                for(var i=0; i<docs.length;i++){
-                    console.log(docs[i]._id + ' - ' + docs[i].name + ' - ' + docs[i].message)
-                }
-                // console.log('=========== Start =============');
-                // console.log(' there is result');
-                // console.log(docs.length);
-                // console.log('=========== End =============');
-                io.emit('btnClicked',docs);
+            // count the letters
+            var sumLetters = msg.length;
+            for(var i = 0 ; i< sumLetters; i++){
+                // console.log('there is one on index :' + i + ' - ' + msg.substr(i,i+1).toString());
+                console.log(i + ' - ' + msg.substr(i,1).toString());
             }
-        });
+
+            // console.log('Message Length :' + sumLetters);
+
+        }else{
+            // messages.push(data);
+            // console.log(messages.length);
+            // inserts data into mongodb
+            messageCollection.insert({name:data.name, message:data.message});
+
+            var sendData= {
+                name : data.name,
+                message:data.message
+            };
+        }
 
 
 
+        showMessages();
     });
 
 
@@ -124,6 +160,21 @@ io.on('connection', (socket) => {
        socket.broadcast.emit('messageNotTypingWarning');
     });
 
+
+    socket.on('checkInputName',(data)=>{
+        console.log(inputNames);
+        if( inputNames.indexOf(data) <0 ){
+            socket.inputName = data;
+            // add nickname to inputnames array
+            inputNames.push(socket.inputName);
+            console.log('valid names ' + inputNames.length);
+            console.log(inputNames);
+        }
+
+        io.emit('inputNames',inputNames);
+    });
+
+
     socket.on('disconnect', () => {
         console.log('disconnected');
         // remove from connections
@@ -131,6 +182,10 @@ io.on('connection', (socket) => {
         numberOfConnections = connections.length;
         // emit the connection amount to screen
         io.emit('numberOfConnections',numberOfConnections);
-    });
+        // remove the user name from inputnames array
+        inputNames.splice(inputNames.indexOf(socket.inputName),1);
+        io.emit('inputNames',inputNames);
+        console.log(inputNames);
 
+    });
 });

@@ -24,6 +24,15 @@
 <div class="container">
     <h1 id="messageHeader">Hello Socket World</h1>
     <h2>Number Of connection <span id="numberOfConnection"></span></h2>
+    <div class="form-group">
+        <label for="namespace">Select Namespace:</label>
+        <select class="form-control" id="namespace">
+            <option value="">Select Namespace</option>
+            <option value="namespace1">namespace1</option>
+            <option value="namespace2">namespace2</option>
+            <option value="namespace3">namespace3</option>
+        </select>
+    </div>
     <form action="">
         <div class="form-group">
             <label for="name">Name:</label>
@@ -44,6 +53,7 @@
     <h2>Messages</h2>
     <span id="socketMessages"></span>
     <ul id="messages"></ul>
+    <ul id="inputNames"></ul>
 
 
 </div>
@@ -52,16 +62,28 @@
 <script>
     $( document ).ready(function() {
 
+        // select box for namespace
+        // const namespace = $('#namespace');
+        // var namespaceValue;
+        // namespace.change(()=>{
+        //     namespaceValue = namespace.val();
+        //     alert(namespaceValue);
+        //     var socket = io('/' + namespaceValue);
+        // });
+
         // new instance
         var socket = io();
 
+        // var socket = io('/' + namespaceValue);
+
         // Get the DOM
         const messageHeader =  document.getElementById('messageHeader');
-        // var messageHeader = $('#messageHeader');
         const numberOfConnection = document.getElementById('numberOfConnection');
         const btnSendMessage = document.getElementById('btnSendMessage');
 
-        const inputName = document.getElementById('name');
+        // const inputName = document.getElementById('name');
+        const inputName = $('#name');
+
         const inputMessage = document.getElementById('message');
         const socketMessages = document.getElementById('socketMessages');
 
@@ -85,7 +107,8 @@
         });
 
 
-        $('form').submit(()=>{
+        $('form').submit((e)=>{
+            e.preventDefault();
             // get the data
             var data = {
                 name: $('#name').val(),
@@ -94,7 +117,7 @@
             // emit the data from form to app.js
             socket.emit('btnClick', data);
             socket.emit('messageNotTyping');
-            $('#name').val('');
+            // $('#name').val('');
             $('#message').val('');
             $('#messages').empty();
             return false;
@@ -113,14 +136,33 @@
 
         $('#message').keydown(()=>{
             // console.log(inputName.value);
-            socket.emit('messageTyping', inputName.value);
+            socket.emit('messageTyping', inputName.val());
         });
 
         $('#message').keyup(()=>{
             // console.log(inputName.value);
             setTimeout(()=>{
-                socket.emit('messageNotTyping', inputName.value);
+                socket.emit('messageNotTyping', inputName.val());
             },3000);
+
+        });
+
+
+        inputName.focusout(() => {
+            // alert(inputName.val());
+            if (inputName.val() === '') {
+                alert('Write a name');
+            } else {
+                socket.emit('checkInputName', inputName.val());
+            }
+        });
+
+        socket.on('inputNames',(inputNames)=>{
+           console.log(inputNames);
+            $('#inputNames').empty();
+            for(var i=0; i<inputNames.length;i++){
+                $('#inputNames').append($('<li>').text(inputNames[i].toString()));
+            };
 
         });
 
