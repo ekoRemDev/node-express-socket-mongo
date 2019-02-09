@@ -1,0 +1,8 @@
+{
+  "name": "Ekoremdev@gmail.com portfolio App",
+  "description": "A Node.js app using Express 4",
+  "repository": "https://github.com/ekoRemDev/ekoremdev.git",
+  "logo": "",
+  "keywords": ["node", "express", "heroku"],
+  "image": "heroku/nodejs"
+}
